@@ -97,7 +97,7 @@ class _AmazonWebViewState extends State<AmazonWebView> {
     """);
 
 
-    //moahemd hussien and abo mostafa
+    //moahemd hussien and abod mostafa mu friend
 
     String productRating = await _runJS("""
   (() => {
