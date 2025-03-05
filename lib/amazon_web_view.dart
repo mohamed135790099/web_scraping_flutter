@@ -90,6 +90,7 @@ class _AmazonWebViewState extends State<AmazonWebView> {
         if (!imgElement) {
           return "";
         }
+        
         return imgElement.src;
       })()
     """);
