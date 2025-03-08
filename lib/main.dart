@@ -104,6 +104,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
 Future<void> setupSentry(
     AppRunner appRunner,{
+
       bool isIntegrationTest = false,
       BeforeSendCallback? beforeSendCallback,
     }) async {
