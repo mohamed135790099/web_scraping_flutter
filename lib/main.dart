@@ -1,16 +1,26 @@
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:logger/web.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:web_scraping_flutter/logger.dart';
 import 'package:web_scraping_flutter/screen_errors.dart';
 
 import 'amazon_web_view.dart';
+import 'crashlytics_demo.dart';
+import 'firebase_options.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();  // مهم جدًا
+
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  // تفعيل تسجيل الأخطاء
+  FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterError;
+
   await setupSentry(
       () => runApp(
     SentryWidget(
@@ -85,16 +95,25 @@ class _MyHomePageState extends State<MyHomePage> {
                       MaterialPageRoute(builder:(context)=>AmazonWebView()));
                 }, child: const Text("تصفح امازون ")),
             const SizedBox(height:20),
-            const SizedBox(height:20),
             ElevatedButton(
                 style:ElevatedButton.styleFrom(
-                    backgroundColor:Colors.amberAccent,
+                    backgroundColor:Colors.cyan,
                     minimumSize:const Size(double.infinity, 43)
                 ),
                 onPressed:(){
                   Navigator.of(context).push(
                       MaterialPageRoute(builder:(context)=>ErrorTestScreen()));
                 }, child: const Text("Test Sentry")),
+            const SizedBox(height:20),
+            ElevatedButton(
+                style:ElevatedButton.styleFrom(
+                    backgroundColor:Colors.teal,
+                    minimumSize:const Size(double.infinity, 43)
+                ),
+                onPressed:(){
+                  Navigator.of(context).push(
+                      MaterialPageRoute(builder:(context)=>CrashlyticsDemo()));
+                }, child: const Text("Test Crashlytics")),
           ],
         ),
       ),

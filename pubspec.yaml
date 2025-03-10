@@ -40,6 +40,9 @@ dependencies:
   path_provider:
   sentry_flutter:
   dio:
+  firebase_core:
+  firebase_crashlytics: ^4.3.4
+
 
 
 
