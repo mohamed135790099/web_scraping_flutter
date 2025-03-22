@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
@@ -5,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:web_scraping_flutter/logger.dart';
 import 'package:web_scraping_flutter/screen_errors.dart';
+import 'package:app_links/app_links.dart';
 
 import 'amazon_web_view.dart';
 import 'crashlytics_demo.dart';
@@ -21,6 +24,9 @@ Future<void> main() async {
   // تفعيل تسجيل الأخطاء
   FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterError;
 
+  runApp(MyApp());
+
+  /*
   await setupSentry(
       () => runApp(
     SentryWidget(
@@ -31,6 +37,9 @@ Future<void> main() async {
     ),
   ),
   );
+
+  */
+
 }
 
 class MyApp extends StatelessWidget {
@@ -61,6 +70,46 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+
+  late final AppLinks _appLinks;
+
+  @override
+  void initState() {
+    super.initState();
+    _appLinks = AppLinks();
+    _setupDeepLinkHandler();
+  }
+
+  void _setupDeepLinkHandler() async {
+    // Handle incoming deep links
+    _appLinks.uriLinkStream.listen((Uri? uri) {
+      if (uri != null) {
+        if (kDebugMode) {
+          print('Deep link received: $uri');
+        }
+        _handleDeepLink(uri);
+      }
+    });
+
+    // Handle initial deep link
+    final Uri? initialLink = await _appLinks.getInitialLink();
+    if (initialLink != null) {
+      if (kDebugMode) {
+        print('Initial deep link: $initialLink');
+      }
+      _handleDeepLink(initialLink);
+    }
+  }
+
+  void _handleDeepLink(Uri uri) {
+    if (uri.pathSegments.isNotEmpty && uri.pathSegments.first == 'get-one-service') {
+      final productId = uri.pathSegments.last;
+      if (productId.isNotEmpty) {
+        Navigator.of(context).push(
+            MaterialPageRoute(builder:(context)=>AmazonWebView()));
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -118,6 +167,11 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 }
 
