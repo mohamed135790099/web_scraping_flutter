@@ -43,6 +43,19 @@ dependencies:
   firebase_core:
   firebase_crashlytics: ^4.3.4
   app_links: ^6.4.0
+  firebase_auth:
+  google_sign_in:
+  flutter_secure_storage:
+  googleapis:
+  googleapis_auth:
+  file_picker:
+  mime:
+  image_picker:
+  permission_handler:
+  intl:
+  open_file:
+  root_checker_plus: ^0.0.4
+
 
 
 
@@ -70,6 +83,8 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+
 
   # To add assets to your application, add an assets section, like this:
   # assets:
