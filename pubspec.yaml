@@ -1,5 +1,5 @@
-name: web_scraping_flutter
-description: "A new Flutter project."
+name: drasha_chat_app
+description: "Drasha - Chat & Drawing App with Flutter, Firebase, and BLoC"
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -31,35 +31,46 @@ dependencies:
   flutter:
     sdk: flutter
 
-
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.6
-  webview_flutter:
-  logger:
-  path_provider:
-  sentry_flutter:
-  dio:
-  firebase_core:
+  
+  # Firebase
+  firebase_core: ^3.6.0
+  firebase_auth: ^5.3.3
+  cloud_firestore: ^5.4.3
+  firebase_storage: ^12.3.3
   firebase_crashlytics: ^4.3.4
-  app_links: ^6.4.0
-  firebase_auth:
-  google_sign_in:
-  flutter_secure_storage:
-  googleapis:
-  googleapis_auth:
-  file_picker:
-  mime:
-  image_picker:
-  permission_handler:
-  intl:
-  open_file:
-  root_checker_plus: ^0.0.4
+  sentry:
+  dartz:
+  pretty_dio_logger: ^1.4.0
+  get_it:
 
+  
+  # State Management
+  flutter_bloc: ^9.1.1
+  dio: ^5.8.0+1
+  equatable: ^2.0.7
+  
+  # UI & Navigation
+  flutter_svg: ^2.0.10+1
+  cached_network_image: ^3.4.1
+  shimmer: ^3.0.0
 
-
-
-
+  
+  # Utilities
+  intl: ^0.19.0
+  uuid: ^4.5.1
+  image_picker: ^1.1.2
+  path_provider: ^2.1.4
+  
+  # Drawing
+  flutter_colorpicker: ^1.0.3
+  image_gallery_saver: ^2.0.3
+  
+  # Others
+  logger: ^2.0.2+1
+  flutter_dotenv: ^5.1.0
 
 dev_dependencies:
   flutter_test:
@@ -72,7 +83,6 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^3.0.0
 
-
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
@@ -84,12 +94,11 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
-
-
   # To add assets to your application, add an assets section, like this:
-  # assets:
-  #   - images/a_dot_burr.jpeg
-  #   - images/a_dot_ham.jpeg
+  assets:
+    - .env
+    - assets/images/
+    - assets/icons/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

@@ -1,24 +1,32 @@
 import 'dart:async';
 import 'dart:io';
-
+import 'package:encrypt/encrypt.dart' as encrypt;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:root_checker_plus/root_checker_plus.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
+import 'package:web_scraping_flutter/advanced_bloc/features/counter/counter_bloc/counter_bloc.dart';
+import 'package:web_scraping_flutter/advanced_bloc/features/counter/counter_screen.dart';
+import 'package:web_scraping_flutter/advanced_bloc/features/login/presentation/screens/login_screen.dart';
 import 'package:web_scraping_flutter/app_routes.dart';
+import 'package:web_scraping_flutter/blocobserve.dart';
 import 'package:web_scraping_flutter/google_drive/drive_example_screen.dart';
 import 'package:web_scraping_flutter/logger.dart';
 import 'package:web_scraping_flutter/restorable_page.dart';
-import 'package:web_scraping_flutter/restorable_widgets_project/lib/main.dart';
 import 'package:web_scraping_flutter/screen_errors.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:app_links/app_links.dart';
 
+import 'advanced_bloc/features/login/presentation/cubit/login_cubit.dart';
+import 'advanced_bloc/features/singup/persentation/screen/signup_page.dart';
 import 'amazon_web_view.dart';
 import 'crashlytics_demo.dart';
 import 'firebase_options.dart';
+import 'injection_container.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -28,8 +36,12 @@ Future<void> main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  await ServiceLocator.init();
   // تفعيل تسجيل الأخطاء
+  Bloc.observer = MyBlocObserver();
   FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterError;
+  await dotenv.load(fileName: ".env");
+
 
   runApp(const MyApp());
 
@@ -80,7 +92,36 @@ class _MyAppState extends State<MyApp>  with RestorationMixin {
   @override
   void initState() {
     super.initState();
+    initEncrypter();
     checkJailBreakAndRootedCheck();
+  }
+
+
+  void initEncrypter() {
+    // 1. مفتاح التشفير - الأفضل إنشاؤه مسبقاً وليس بشكل ديناميكي
+    final key = encrypt.Key.fromSecureRandom(32); // 32 bytes for AES-256
+
+    // 2. ناقل التهيئة (IV) - يجب أن يكون عشوائياً وفريداً لكل عملية تشفير
+    final iv = encrypt.IV.fromSecureRandom(16); // 16 bytes for AES
+
+    // 3. إنشاء شيفرة AES في وضع CBC (الأكثر أماناً)
+    final encrypter = encrypt.Encrypter(
+      encrypt.AES(
+        key,
+        mode: encrypt.AESMode.cbc,
+      ),
+    );
+
+    // 4. النص المراد تشفيره
+    const plainText = 'محمد حسين';
+
+    // 5. عملية التشفير
+    final encrypted = encrypter.encrypt(plainText, iv: iv);
+    print('النص المشفر: ${encrypted.base64}');
+
+    // 6. عملية فك التشفير
+    final decrypted = encrypter.decrypt(encrypted, iv: iv);
+    print('النص المفكوك: $decrypted');
   }
 
   checkJailBreakAndRootedCheck(){
@@ -134,6 +175,9 @@ class _MyAppState extends State<MyApp>  with RestorationMixin {
 
   @override
   Widget build(BuildContext context) {
+    final apiUrl = dotenv.env['API_URL'] ?? 'https://default.api.url';
+    final debugMode = dotenv.env['DEBUG_MODE'] == 'true';
+
 
     return MaterialApp(
       title: 'Flutter Demo',
@@ -217,75 +261,115 @@ class _MyHomePageState extends State<MyHomePage>{
       title: Text(widget.title),
       ),
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-             const Text(
-              'You have pushed the button this many times:',
-            ),
-            ElevatedButton(
-              style:ElevatedButton.styleFrom(
-                backgroundColor:Colors.green,
-                minimumSize:const Size(double.infinity, 43)
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+               const Text(
+                'You have pushed the button this many times:',
               ),
-                onPressed:(){
-              Navigator.of(context).push(MaterialPageRoute(builder:(context)=>const TestLogger()));
-            }, child: Text("logger")),
-            const SizedBox(height:20),
-            ElevatedButton(
+              ElevatedButton(
                 style:ElevatedButton.styleFrom(
-                    backgroundColor:Colors.amberAccent,
-                    minimumSize:const Size(double.infinity, 43)
+                  backgroundColor:Colors.green,
+                  minimumSize:const Size(double.infinity, 43)
                 ),
-                onPressed:(){
-                  Navigator.of(context).push(
-                      MaterialPageRoute(builder:(context)=>AmazonWebView()));
-                }, child: const Text("تصفح امازون ")),
-            const SizedBox(height:20),
-            ElevatedButton(
-                style:ElevatedButton.styleFrom(
-                    backgroundColor:Colors.cyan,
-                    minimumSize:const Size(double.infinity, 43)
-                ),
-                onPressed:(){
-                  Navigator.of(context).push(
-                      MaterialPageRoute(builder:(context)=>ErrorTestScreen()));
-                }, child: const Text("Test Sentry")),
-            const SizedBox(height:20),
-            ElevatedButton(
-                style:ElevatedButton.styleFrom(
-                    backgroundColor:Colors.cyan,
-                    minimumSize:const Size(double.infinity, 43)
-                ),
-                onPressed:(){
-                  Navigator.of(context).push(
-                      MaterialPageRoute(builder:(context)=>const DriveScreen()));
-                }, child: const Text("Google Drive")),
-            const SizedBox(height:20),
-            ElevatedButton(
-                style:ElevatedButton.styleFrom(
-                    backgroundColor:Colors.teal,
-                    minimumSize:const Size(double.infinity, 43)
-                ),
-                onPressed:(){
-                  Navigator.of(context).push(
-                      MaterialPageRoute(builder:(context)=>CrashlyticsDemo()));
-                }, child: const Text("Test Crashlytics")),
-            const SizedBox(height:20),
-            ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.deepPurple,
-                    minimumSize: const Size(double.infinity, 43)
-                ),
-                onPressed: () {
-                  Navigator.restorablePush(context, formRouteBuilder);
-                 // Navigator.of(context).pushNamed(AppRoutes.profile);
-                },
-                child: const Text("Restorable Page")
-            ),
+                  onPressed:(){
+                Navigator.of(context).push(MaterialPageRoute(builder:(context)=>const TestLogger()));
+              }, child: Text("logger")),
+              const SizedBox(height:20),
+              ElevatedButton(
+                  style:ElevatedButton.styleFrom(
+                      backgroundColor:Colors.amberAccent,
+                      minimumSize:const Size(double.infinity, 43)
+                  ),
+                  onPressed:(){
+                    Navigator.of(context).push(
+                        MaterialPageRoute(builder:(context)=>AmazonWebView()));
+                  }, child: const Text("تصفح امازون ")),
+              const SizedBox(height:20),
+              ElevatedButton(
+                  style:ElevatedButton.styleFrom(
+                      backgroundColor:Colors.cyan,
+                      minimumSize:const Size(double.infinity, 43)
+                  ),
+                  onPressed:(){
+                    Navigator.of(context).push(
+                        MaterialPageRoute(builder:(context)=>ErrorTestScreen()));
+                  }, child: const Text("Test Sentry")),
+              const SizedBox(height:20),
+              ElevatedButton(
+                  style:ElevatedButton.styleFrom(
+                      backgroundColor:Colors.cyan,
+                      minimumSize:const Size(double.infinity, 43)
+                  ),
+                  onPressed:(){
+                    Navigator.of(context).push(
+                        MaterialPageRoute(builder:(context)=>const DriveScreen()));
+                  }, child: const Text("Google Drive")),
+              const SizedBox(height:20),
+              ElevatedButton(
+                  style:ElevatedButton.styleFrom(
+                      backgroundColor:Colors.teal,
+                      minimumSize:const Size(double.infinity, 43)
+                  ),
+                  onPressed:(){
+                    Navigator.of(context).push(
+                        MaterialPageRoute(builder:(context)=>CrashlyticsDemo()));
+                  }, child: const Text("Test Crashlytics")),
+              const SizedBox(height:20),
+              ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.deepPurple,
+                      minimumSize: const Size(double.infinity, 43)
+                  ),
+                  onPressed: () {
+                    Navigator.restorablePush(context, formRouteBuilder);
+                   // Navigator.of(context).pushNamed(AppRoutes.profile);
+                  },
+                  child: const Text("Restorable Page")
+              ),
+              const SizedBox(height:20),
+              ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.deepPurple,
+                      minimumSize: const Size(double.infinity, 43)
+                  ),
+                  onPressed: () {
+                    Navigator.of(context).push(
+                        MaterialPageRoute(builder:(context)=> BlocProvider<CounterBloc>(
+                            create: (_) => CounterBloc(),child: const CounterScreen())));
+                  },
+                  child: const Text("Counter Page")
+              ),
+              const SizedBox(height:20),
+              ElevatedButton(
+                  style:ElevatedButton.styleFrom(
+                      backgroundColor:Colors.teal,
+                      minimumSize:const Size(double.infinity, 43)
+                  ),
+                  onPressed:(){
+                    Navigator.of(context).push(
+                        MaterialPageRoute(builder:(context)=>BlocProvider(
+                          create:(_)=>LoginCubit(sl()),
+                            child: const LoginPage())));
+                  }, child: const Text("Login Page")
+              ),
+              const SizedBox(height:20),
+              ElevatedButton(
+                  style:ElevatedButton.styleFrom(
+                      backgroundColor:Colors.teal,
+                      minimumSize:const Size(double.infinity, 43)
+                  ),
+                  onPressed:(){
+                  Navigator.push(context,MaterialPageRoute(
+                      builder:(context)=>const SignupPage()
+                  ));
+                  }, child: const Text("Login Page")
+              ),
 
 
-          ],
+            ],
+          ),
         ),
       ),
     );
